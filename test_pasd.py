@@ -23,6 +23,7 @@ from transformers import CLIPTextModel, CLIPTokenizer, CLIPImageProcessor
 from pasd.pipelines.pipeline_pasd import StableDiffusionControlNetPipeline
 from pasd.myutils.misc import load_dreambooth_lora
 from pasd.myutils.wavelet_color_fix import wavelet_color_fix
+from pasd.utils.memory import cleanup_memory, log_memory_usage, get_optimal_tile_size
 #from annotator.retinaface import RetinaFaceDetection
 
 sys.path.append('PASD')
@@ -162,7 +163,7 @@ def get_validation_prompt(args, image, model, preprocess, category, device='cuda
             validation_prompt = caption if args.prompt=="" else f"{caption}, {args.prompt}"
         else:
             image = preprocess(image).unsqueeze(0)
-            with torch.no_grad(), torch.cuda.amp.autocast():
+            with torch.no_grad(), torch.autocast("cuda" if torch.cuda.is_available() else "cpu"):
                 generated = model.generate(image)
             caption = open_clip.decode(generated[0]).split("<end_of_text>")[0].replace("<start_of_text>", "")
             caption = caption.replace("blurry", "clear").replace("noisy", "clean") #
@@ -173,6 +174,11 @@ def get_validation_prompt(args, image, model, preprocess, category, device='cuda
     return validation_prompt
 
 def main(args, enable_xformers_memory_efficient_attention=True,):
+    # Dynamic device detection
+    if not torch.cuda.is_available() and args.mixed_precision == "fp16":
+        logger.warning("CUDA not available, switching to fp32 precision")
+        args.mixed_precision = "no"
+    
     accelerator = Accelerator(
         mixed_precision=args.mixed_precision,
     )
@@ -200,6 +206,9 @@ def main(args, enable_xformers_memory_efficient_attention=True,):
     ])
                 
     if accelerator.is_main_process:
+        # Log initial memory state
+        log_memory_usage("Initial")
+        
         generator = torch.Generator(device=accelerator.device)
         if args.seed is not None:
             generator.manual_seed(args.seed)
@@ -209,7 +218,8 @@ def main(args, enable_xformers_memory_efficient_attention=True,):
         else:
             image_names = [args.image_path]
 
-        for image_name in image_names[:]:
+        for idx, image_name in enumerate(image_names[:]):
+            logger.info(f"Processing image {idx+1}/{len(image_names)}: {os.path.basename(image_name)}")
             validation_image = Image.open(image_name).convert("RGB")
             #validation_image = Image.new(mode='RGB', size=validation_image.size, color=(0,0,0))
             if args.control_type == "realisr":
@@ -245,8 +255,11 @@ def main(args, enable_xformers_memory_efficient_attention=True,):
                         args, validation_prompt, validation_image, num_inference_steps=args.num_inference_steps, generator=generator, #height=height, width=width,
                         guidance_scale=args.guidance_scale, negative_prompt=negative_prompt, conditioning_scale=args.conditioning_scale,
                     ).images[0]
+            except torch.cuda.OutOfMemoryError:
+                logger.error(f"GPU out of memory processing {image_name}. Try reducing --decoder_tiled_size from {args.decoder_tiled_size} to {args.decoder_tiled_size//2}")
+                continue
             except Exception as e:
-                print(e)
+                logger.error(f"Processing failed for {image_name}: {str(e)}")
                 continue
 
             if args.control_type=="realisr": 
@@ -269,10 +282,16 @@ def main(args, enable_xformers_memory_efficient_attention=True,):
                 cv2.imwrite(f'{args.output_dir}/{name}.png', np_image)
             else:
                 image.save(f'{args.output_dir}/{name}.png')
+            
+            # Clean up memory after each image
+            cleanup_memory()
+            
+        logger.info(f"Processing complete. Output saved to {args.output_dir}/")
+        log_memory_usage("Final")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--pretrained_model_path", type=str, default="checkpoints/stable-diffusion-v1-5", help="path of base SD model")
+    parser.add_argument("--pretrained_model_path", type=str, default="stable-diffusion-v1-5/stable-diffusion-v1-5", help="path of base SD model")
     parser.add_argument("--lcm_lora_path", type=str, default="checkpoints/lcm-lora-sdv1-5", help="path of LCM lora model")
     parser.add_argument("--pasd_model_path", type=str, default="runs/pasd/checkpoint-100000", help="path of PASD model")
     parser.add_argument("--personalized_model_path", type=str, default="majicmixRealistic_v7.safetensors", help="name of personalized dreambooth model, path is 'checkpoints/personalized_models'") # toonyou_beta3.safetensors, majicmixRealistic_v6.safetensors, unet_disney

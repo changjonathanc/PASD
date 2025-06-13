@@ -27,11 +27,11 @@ python train_pasd.py --use_pasd_light
 
 ### Testing
 ```bash
-# Basic PASD testing
-python test_pasd.py
+# Basic PASD testing (with HuggingFace SD1.5)
+python test_pasd.py --pretrained_model_path "stable-diffusion-v1-5/stable-diffusion-v1-5"
 
 # PASD Light with personalized models
-python test_pasd.py --use_pasd_light --use_personalized_model
+python test_pasd.py --pretrained_model_path "stable-diffusion-v1-5/stable-diffusion-v1-5" --use_pasd_light --use_personalized_model
 
 # PASD SDXL testing
 python test_pasd_sdxl.py
@@ -79,3 +79,11 @@ The system supports multiple control types via `--control_type`:
 Use `--use_pasd_light` flag to switch between:
 - Full PASD: Higher quality, more memory
 - PASD Light: Optimized attention, faster inference
+
+### Code Improvements Made
+- Fixed deprecated `torch.cuda.amp.autocast()` for PyTorch 2.0+ compatibility
+- Added dynamic device detection for cross-platform support
+- Implemented memory management utilities in `pasd/utils/memory.py`
+- Added better error handling with specific CUDA OOM detection
+- Enhanced logging with progress indicators and memory usage tracking
+- Updated HuggingFace model path from `runwayml/stable-diffusion-v1-5` to `stable-diffusion-v1-5/stable-diffusion-v1-5`
