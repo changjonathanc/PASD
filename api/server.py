@@ -94,10 +94,14 @@ async def load_model():
         except:
             logger.info("⚠️  XFormers not available, using default attention")
         
-        # Enable model CPU offload for better memory management
+        # Enable memory optimizations to match test script behavior
         if device.type == "cuda":
+            # Use same memory strategy as test script (CPU offload but no VAE tiling)
             model_pipeline.enable_model_cpu_offload()
             logger.info("✅ Model CPU offload enabled")
+            
+            # Note: VAE tiling is commented out in test script, so we skip it too
+            # This keeps the same memory profile as the working test script
         
         logger.info("🎉 PASD-SDXL model loaded successfully!")
         
@@ -113,7 +117,17 @@ async def unload_model():
         del model_pipeline
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
+            torch.cuda.synchronize()
         logger.info("🧹 Model unloaded from memory")
+
+
+def clear_gpu_memory():
+    """Aggressive GPU memory cleanup"""
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+        torch.cuda.synchronize()
+        import gc
+        gc.collect()
 
 
 @asynccontextmanager
@@ -198,14 +212,25 @@ async def upscale_image(
         # Image preprocessing (matching test_pasd_sdxl.py logic)
         ori_width, ori_height = input_image.size
         
-        # Apply upscaling first
+        # Apply upscaling first  
         validation_image = input_image.resize((input_image.size[0] * scale, input_image.size[1] * scale))
+        
+        # Process size constraint (matching test_pasd_sdxl.py line 246-248)
+        process_size = 1280  # Default from test script
+        if min(validation_image.size) < process_size:
+            from torchvision import transforms
+            resize_preproc = transforms.Compose([
+                transforms.Resize(process_size, max_size=process_size*2, interpolation=transforms.InterpolationMode.BILINEAR),
+            ])
+            validation_image = resize_preproc(validation_image)
         
         # Ensure dimensions are multiples of 8 (required for diffusion models)
         validation_image = validation_image.resize((
             validation_image.size[0] // 8 * 8, 
             validation_image.size[1] // 8 * 8
         ))
+        
+        logger.info(f"Processed image size: {validation_image.size}")
         
         # Prepare prompts (matching test_pasd_sdxl.py defaults)
         base_prompt = "photorealistic, clean, high-resolution, 8k"
@@ -223,6 +248,9 @@ async def upscale_image(
         
         args = Args()
         
+        # Clear GPU cache before inference (aggressive cleanup)
+        clear_gpu_memory()
+        
         # Generate image (matching test_pasd_sdxl.py call)
         with torch.autocast("cuda" if torch.cuda.is_available() else "cpu"):
             result = model_pipeline(
@@ -235,6 +263,9 @@ async def upscale_image(
                 controlnet_conditioning_scale=conditioning_scale,
                 guess_mode=False,
             )
+        
+        # Clear cache after inference (aggressive cleanup)
+        clear_gpu_memory()
         
         output_image = result.images[0]
         
