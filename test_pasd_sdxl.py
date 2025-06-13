@@ -277,9 +277,13 @@ def main(args, enable_xformers_memory_efficient_attention=False):
                 hires = np.copy(orig_yuv)
                 hires[:, :, 1:3] = color_yuv[:, :, 1:3]
                 np_image = cv2.cvtColor(hires, cv2.COLOR_YUV2BGR)
-                cv2.imwrite(f'{args.output_dir}/{name}.png', np_image)
+                output_path = f'{args.output_dir}/{name}.png'
+                cv2.imwrite(output_path, np_image)
+                print(f"✅ Saved: {output_path}")
             else:
-                image.save(f'{args.output_dir}/{name}.png')
+                output_path = f'{args.output_dir}/{name}.png'
+                image.save(output_path)
+                print(f"✅ Saved: {output_path}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
