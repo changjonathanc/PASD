@@ -211,11 +211,15 @@ async def upscale_image(
         base_prompt = "photorealistic, clean, high-resolution, 8k"
         full_prompt = f"{base_prompt}, {prompt}" if prompt else base_prompt
         
-        # Create args-like object for pipeline compatibility
+        # Create args-like object for pipeline compatibility (matching test_pasd_sdxl.py defaults)
         class Args:
             def __init__(self):
                 self.control_type = "realisr"
                 self.conditioning_scale = conditioning_scale
+                self.latent_tiled_size = 180
+                self.latent_tiled_overlap = 8
+                self.decoder_tiled_size = 512
+                self.encoder_tiled_size = 2048
         
         args = Args()
         
