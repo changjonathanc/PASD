@@ -1,0 +1,9 @@
+# Server requirements for PASD-SDXL API
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+python-multipart>=0.0.6
+accelerate>=0.24.0
+requests>=2.31.0
+
+# Core PASD requirements (install main package first)
+# pip install -e .
