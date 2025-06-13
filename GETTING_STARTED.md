@@ -40,7 +40,7 @@ cd ../..
 ### Run Examples Script
 
 ```bash
-# Interactive script with all options
+# Automatic script with best quality settings
 ./run_examples.sh
 ```
 
