@@ -19,20 +19,18 @@ pip install -r requirements-test.txt
 
 ## Download Models
 
-**For 24GB VRAM (RTX 3090/4090):**
 ```bash
-cd runs/pasd/
-wget https://public-vigen-video.oss-cn-shanghai.aliyuncs.com/robin/models/PASD/pasd.zip
-unzip pasd.zip
-cd ../..
+# Automatic model downloader (downloads all variants)
+./download_models.sh
 ```
 
-**For 80GB VRAM (A100/H100):**
+**Manual download (if needed):**
 ```bash
-cd runs/pasd_rrdb/
-wget https://public-vigen-video.oss-cn-shanghai.aliyuncs.com/robin/models/PASD/pasd_rrdb.zip
-unzip pasd_rrdb.zip
-cd ../..
+# For 24GB VRAM (RTX 3090/4090)
+cd runs/pasd/ && wget https://public-vigen-video.oss-cn-shanghai.aliyuncs.com/robin/models/PASD/pasd.zip && unzip pasd.zip && cd ../..
+
+# For 80GB VRAM (A100/H100)  
+cd runs/pasd_rrdb/ && wget https://public-vigen-video.oss-cn-shanghai.aliyuncs.com/robin/models/PASD/pasd_rrdb.zip && unzip pasd_rrdb.zip && cd ../..
 ```
 
 ## Quick Start
@@ -66,7 +64,7 @@ python test_pasd.py --image_path examples/Set5/ --upscale 2
 
 **Colorization:**
 ```bash
-python test_pasd.py --image_path path/to/grayscale_image.png --control_type grayscale
+python test_pasd.py --image_path path/to/grayscale_image.png --control_type grayscale --use_pasd_light
 ```
 
 ## Optional: Higher Quality
@@ -91,6 +89,11 @@ Open `http://127.0.0.1:7860` in your browser.
 ## Troubleshooting
 
 **Model not found error**: Download the PASD models first (see Download Models section)
+
+**Missing dependencies**: Install additional requirements:
+```bash
+pip install basicsr
+```
 
 **Out of memory**: Your GPU doesn't have enough VRAM. Use a smaller `--upscale` value or try PASD Light:
 ```bash

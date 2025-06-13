@@ -60,7 +60,7 @@ print('Created examples/dog_gray.png')
 fi
 
 run_test "Colorization (30 steps)" \
-    "python test_pasd.py --control_type grayscale --image_path examples/dog_gray.png --num_inference_steps 30 --output_dir output/colorization" \
+    "python test_pasd.py --control_type grayscale --image_path examples/dog_gray.png --num_inference_steps 30 --use_pasd_light --output_dir output/colorization" \
     "output/colorization"
 
 # 4. Custom prompts with high quality
@@ -84,6 +84,7 @@ if [ ${#FAILED_TESTS[@]} -gt 0 ]; then
     done
     echo ""
     echo "💡 Common failure causes:"
+    echo "   - Missing dependencies: pip install basicsr"
     echo "   - Insufficient GPU memory (need 24GB+ for best quality)"
     echo "   - Missing PASD model weights in runs/ directory"
     echo "   - CUDA/PyTorch installation issues"

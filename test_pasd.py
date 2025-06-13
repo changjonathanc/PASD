@@ -42,7 +42,13 @@ def load_pasd_pipeline(args, accelerator, enable_xformers_memory_efficient_atten
         from pasd.models.pasd.controlnet import ControlNetModel
     # Load scheduler, tokenizer and models.
     if args.control_type=="grayscale":
-        scheduler = UniPCMultistepScheduler.from_pretrained("/".join(args.pasd_model_path.split("/")[:-1]), subfolder="scheduler")
+        # For grayscale/colorization, check if custom scheduler exists, otherwise use base model
+        pasd_scheduler_path = "/".join(args.pasd_model_path.split("/")[:-1])
+        try:
+            scheduler = UniPCMultistepScheduler.from_pretrained(pasd_scheduler_path, subfolder="scheduler")
+        except:
+            logger.warning(f"Custom scheduler not found at {pasd_scheduler_path}, using base model scheduler")
+            scheduler = UniPCMultistepScheduler.from_pretrained(args.pretrained_model_path, subfolder="scheduler")
     else:
         scheduler = UniPCMultistepScheduler.from_pretrained(args.pretrained_model_path, subfolder="scheduler")
     text_encoder = CLIPTextModel.from_pretrained(args.pretrained_model_path, subfolder="text_encoder")
