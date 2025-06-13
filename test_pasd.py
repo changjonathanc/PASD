@@ -47,7 +47,7 @@ def load_pasd_pipeline(args, accelerator, enable_xformers_memory_efficient_atten
     text_encoder = CLIPTextModel.from_pretrained(args.pretrained_model_path, subfolder="text_encoder")
     tokenizer = CLIPTokenizer.from_pretrained(args.pretrained_model_path, subfolder="tokenizer")
     vae = AutoencoderKL.from_pretrained(args.pretrained_model_path, subfolder="vae")
-    feature_extractor = CLIPImageProcessor.from_pretrained(f"{args.pretrained_model_path}/feature_extractor")
+    feature_extractor = CLIPImageProcessor.from_pretrained(args.pretrained_model_path, subfolder="feature_extractor")
     unet = UNet2DConditionModel.from_pretrained(args.pasd_model_path, subfolder="unet")
     controlnet = ControlNetModel.from_pretrained(args.pasd_model_path, subfolder="controlnet")
 

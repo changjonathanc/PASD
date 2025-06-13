@@ -18,16 +18,16 @@ pip install -e .
 pip install -r requirements-test.txt
 ```
 
-2. **Download base Stable Diffusion model:**
+2. **Download checkpoint configs (optional):**
 ```bash
-# Create checkpoints directory
+# Create checkpoints directory for config files
 mkdir -p checkpoints
 
-# Download SD1.5 model files
+# Download checkpoint config files (optional - mainly for local model storage)
 wget -O - https://github.com/yangxy/PASD/archive/main.tar.gz | tar xz --strip=1 "PASD-main/checkpoints"
 ```
 
-You'll also need to download the full SD1.5 model from [HuggingFace](https://huggingface.co/runwayml/stable-diffusion-v1-5) and place it in `checkpoints/stable-diffusion-v1-5/`.
+**Note**: You can skip downloading SD1.5 locally! The code supports direct HuggingFace model loading.
 
 3. **Download PASD pretrained models:**
 
@@ -41,12 +41,20 @@ Download one or more of these models and extract to the `runs/` directory:
 ### Basic Image Super-Resolution
 
 ```bash
-# Upscale a single image
-python test_pasd.py --image_path examples/dog.png --upscale 2
+# Upscale a single image (uses HuggingFace SD1.5 automatically)
+python test_pasd.py \
+    --pretrained_model_path "runwayml/stable-diffusion-v1-5" \
+    --image_path examples/dog.png \
+    --upscale 2
 
 # Process all images in a folder
-python test_pasd.py --image_path examples/Set5/ --upscale 2
+python test_pasd.py \
+    --pretrained_model_path "runwayml/stable-diffusion-v1-5" \
+    --image_path examples/Set5/ \
+    --upscale 2
 ```
+
+**Alternative**: If you prefer local models, download SD1.5 to `checkpoints/stable-diffusion-v1-5/` and use the default `--pretrained_model_path`.
 
 ### Enhanced Results with Personalized Models
 
@@ -54,6 +62,7 @@ For better quality, use personalized models:
 
 ```bash
 python test_pasd.py \
+    --pretrained_model_path "runwayml/stable-diffusion-v1-5" \
     --image_path examples/dog.png \
     --use_personalized_model \
     --upscale 2 \
@@ -66,6 +75,7 @@ If you have limited VRAM, use PASD Light:
 
 ```bash
 python test_pasd.py \
+    --pretrained_model_path "runwayml/stable-diffusion-v1-5" \
     --image_path examples/dog.png \
     --use_pasd_light \
     --upscale 2
@@ -77,6 +87,7 @@ Convert grayscale images to color:
 
 ```bash
 python test_pasd.py \
+    --pretrained_model_path "runwayml/stable-diffusion-v1-5" \
     --image_path path/to/grayscale_image.png \
     --control_type grayscale \
     --use_pasd_light
@@ -99,6 +110,7 @@ For different GPU memory sizes:
 **8-12GB VRAM:**
 ```bash
 python test_pasd.py \
+    --pretrained_model_path "runwayml/stable-diffusion-v1-5" \
     --use_pasd_light \
     --decoder_tiled_size 128 \
     --encoder_tiled_size 512 \
@@ -108,6 +120,7 @@ python test_pasd.py \
 **16-20GB VRAM:**
 ```bash
 python test_pasd.py \
+    --pretrained_model_path "runwayml/stable-diffusion-v1-5" \
     --decoder_tiled_size 192 \
     --encoder_tiled_size 768 \
     --latent_tiled_size 240
@@ -115,7 +128,8 @@ python test_pasd.py \
 
 **24GB+ VRAM (default settings work well):**
 ```bash
-python test_pasd.py  # Uses optimized defaults
+python test_pasd.py \
+    --pretrained_model_path "runwayml/stable-diffusion-v1-5"
 ```
 
 ## Web Interface
