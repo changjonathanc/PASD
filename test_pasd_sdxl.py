@@ -172,7 +172,7 @@ def get_validation_prompt(args, image, model, preprocess, category, device='cuda
         else:
             import open_clip
             image = preprocess(image).unsqueeze(0)
-            with torch.no_grad(), torch.cuda.amp.autocast():
+            with torch.no_grad(), torch.autocast("cuda" if torch.cuda.is_available() else "cpu"):
                 generated = model.generate(image)
             caption = open_clip.decode(generated[0]).split("<end_of_text>")[0].replace("<start_of_text>", "")
             caption = caption.replace("blurry", "clear").replace("noisy", "clean").replace("painting", "photo") #
@@ -294,7 +294,7 @@ if __name__ == "__main__":
     parser.add_argument("--negative_prompt", type=str, default="blurry, dirty, messy, frames, deformed, dotted, noise, raster lines, unclear, lowres, over-smoothed, painting, ai generated", help="negative prompt")
     parser.add_argument("--image_path", type=str, default="datasets/realLQ", help="test image path or folder")
     #parser.add_argument("--image_path", type=str, default="examples/dog.png", help="test image path or folder")
-    parser.add_argument("--output_dir", type=str, default="output/realLQ", help="output folder")
+    parser.add_argument("--output_dir", type=str, default="output", help="output folder")
     parser.add_argument("--mixed_precision", type=str, default="bf16", help="mixed precision mode") # no/fp16/bf16
     parser.add_argument("--guidance_scale", type=float, default=7.0, help="classifier-free guidance scale")
     parser.add_argument("--conditioning_scale", type=float, default=0.8, help="conditioning scale for controlnet")
