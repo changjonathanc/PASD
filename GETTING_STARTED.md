@@ -10,15 +10,28 @@ Quick setup guide for PASD (Pixel-Aware Stable Diffusion) image super-resolution
 
 ## Installation
 
+### Option 1: Pip Install (Recommended)
 ```bash
+# Install from GitHub
+pip install git+https://github.com/yangxy/PASD.git
+
+# Or install in development mode
 git clone https://github.com/yangxy/PASD.git
 cd PASD
 pip install -e .
+```
+
+### Option 2: Manual Setup
+```bash
+git clone https://github.com/yangxy/PASD.git
+cd PASD
+pip install -r requirements.txt
 pip install -r requirements-test.txt
 ```
 
 ## Download Models
 
+### Shell Script
 ```bash
 # Automatic model downloader (downloads all variants)
 ./download_models.sh
@@ -44,8 +57,9 @@ cd runs/pasd_rrdb/ && wget https://public-vigen-video.oss-cn-shanghai.aliyuncs.c
 
 ### Manual Commands
 
-**24GB VRAM (Best quality for RTX 3090/4090):**
+**Python Scripts:**
 ```bash
+# 24GB VRAM (Best quality for RTX 3090/4090)
 python test_pasd.py --image_path examples/dog.png --upscale 2
 ```
 

@@ -9,10 +9,10 @@ echo "Running all examples with best quality settings..."
 echo ""
 
 # Create output directories
-mkdir -p output/{basic,rrdb,colorization,custom_prompt,batch}
+mkdir -p output/{basic,sdxl,custom_prompt,batch}
 
 # Track success/failure
-TOTAL_TESTS=5
+TOTAL_TESTS=3
 PASSED_TESTS=0
 FAILED_TESTS=()
 
@@ -37,16 +37,20 @@ run_test "Basic PASD (2x upscale, 30 steps)" \
     "python test_pasd.py --image_path examples/dog.png --upscale 2 --num_inference_steps 30 --output_dir output/basic" \
     "output/basic"
 
-# 2. PASD RRDB (if available - highest quality)
-if [ -d "runs/pasd_rrdb/checkpoint-100000" ]; then
-    run_test "PASD RRDB (4x upscale, 50 steps)" \
-        "python test_pasd.py --pasd_model_path runs/pasd_rrdb/checkpoint-100000 --image_path examples/dog.png --upscale 4 --num_inference_steps 50 --output_dir output/rrdb" \
-        "output/rrdb"
+# 2. PASD SDXL (highest quality alternative - more reliable than RRDB)
+if [ -f "test_pasd_sdxl.py" ]; then
+    run_test "PASD SDXL (2x upscale, best quality)" \
+        "python test_pasd_sdxl.py --image_path examples/dog.png --upscale 2 --num_inference_steps 30 --output_dir output/sdxl" \
+        "output/sdxl"
 else
-    echo "⚠️  PASD RRDB model not found, skipping highest quality test"
-    echo "   Download with: cd runs/pasd_rrdb && wget https://public-vigen-video.oss-cn-shanghai.aliyuncs.com/robin/models/PASD/pasd_rrdb.zip && unzip pasd_rrdb.zip"
+    echo "⚠️  PASD SDXL script not found"
     echo ""
 fi
+
+# Skip PASD RRDB due to dependency conflicts
+echo "⚠️  Skipping PASD RRDB (dependency conflicts with basicsr/torchvision)"
+echo "   Use PASD SDXL above for highest quality instead"
+echo ""
 
 # 3. Colorization
 echo "🎯 Preparing colorization test..."
@@ -59,9 +63,11 @@ print('Created examples/dog_gray.png')
 " || echo "Failed to create grayscale image"
 fi
 
-run_test "Colorization (30 steps)" \
-    "python test_pasd.py --control_type grayscale --image_path examples/dog_gray.png --num_inference_steps 30 --use_pasd_light --output_dir output/colorization" \
-    "output/colorization"
+# Skip PASD Light colorization due to diffusers import issues
+echo "⚠️  Skipping colorization (PASD Light has diffusers import conflicts)"
+echo "   Use basic PASD for colorization if needed:"
+echo "   python test_pasd.py --control_type grayscale --image_path examples/dog_gray.png"
+echo ""
 
 # 4. Custom prompts with high quality
 run_test "Custom Prompts (2x upscale, 40 steps)" \
@@ -93,8 +99,7 @@ fi
 echo ""
 echo "📂 Output directories:"
 echo "   - output/basic/ - Standard PASD results"
-echo "   - output/rrdb/ - Highest quality results (if available)"
-echo "   - output/colorization/ - Grayscale to color results"
+echo "   - output/sdxl/ - Highest quality SDXL results (if available)"
 echo "   - output/custom_prompt/ - Enhanced prompt results"
 echo "   - output/batch/ - Set5 benchmark results"
 

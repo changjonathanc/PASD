@@ -33,11 +33,11 @@ logger = get_logger(__name__, log_level="INFO")
 
 def load_pasd_pipeline(args, accelerator, enable_xformers_memory_efficient_attention=False):
     if args.use_pasd_light:
-        from models.pasd_light.unet_2d_condition import UNet2DConditionModel
-        from models.pasd_light.controlnet import ControlNetModel
+        from pasd.models.pasd_light.unet_2d_condition import UNet2DConditionModel
+        from pasd.models.pasd_light.controlnet import ControlNetModel
     else:
-        from models.pasd.unet_2d_condition import UNet2DConditionModel
-        from models.pasd.controlnet import ControlNetModel
+        from pasd.models.pasd.unet_2d_condition import UNet2DConditionModel
+        from pasd.models.pasd.controlnet import ControlNetModel
     # Load scheduler, tokenizer and models.
     if args.control_type=="grayscale":
         scheduler = EulerDiscreteScheduler.from_pretrained("/".join(args.pasd_model_path.split("/")[:-1]), subfolder="scheduler")
@@ -283,8 +283,8 @@ def main(args, enable_xformers_memory_efficient_attention=False):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--pretrained_model_path", type=str, default="checkpoints/stable-diffusion-xl-base-1.0", help="path of base SD model")
-    parser.add_argument("--pretrained_refiner_path", type=str, default="checkpoints/stable-diffusion-xl-refiner-1.0", help="path of refiner SDXL model")
+    parser.add_argument("--pretrained_model_path", type=str, default="stabilityai/stable-diffusion-xl-base-1.0", help="path of base SD model")
+    parser.add_argument("--pretrained_refiner_path", type=str, default="stabilityai/stable-diffusion-xl-refiner-1.0", help="path of refiner SDXL model")
     parser.add_argument("--pasd_model_path", type=str, default="runs/pasd_sdxl/checkpoint-200000", help="path of PASD model")
     parser.add_argument("--personalized_model_path", type=str, default=None, help="name of personalized dreambooth model, path is 'checkpoints/personalized_models'") # toonyou_beta3.safetensors, majicmixRealistic_v6.safetensors, unet_disney
     parser.add_argument("--control_type", choices=['realisr', 'grayscale'], nargs='?', default="realisr", help="task name")
