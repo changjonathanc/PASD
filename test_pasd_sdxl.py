@@ -42,7 +42,7 @@ def load_pasd_pipeline(args, accelerator, enable_xformers_memory_efficient_atten
     if args.control_type=="grayscale":
         scheduler = EulerDiscreteScheduler.from_pretrained("/".join(args.pasd_model_path.split("/")[:-1]), subfolder="scheduler")
     else:
-        scheduler = EulerDiscreteScheduler.from_pretrained(args.pasd_model_path, subfolder="scheduler")
+        scheduler = EulerDiscreteScheduler.from_pretrained(args.pretrained_model_path, subfolder="scheduler")
     text_encoder_1 = CLIPTextModel.from_pretrained(args.pretrained_model_path, subfolder="text_encoder")
     text_encoder_2 = CLIPTextModelWithProjection.from_pretrained(args.pretrained_model_path, subfolder="text_encoder_2")
     tokenizer_1 = AutoTokenizer.from_pretrained(args.pretrained_model_path, subfolder="tokenizer", use_fast=False,)
@@ -53,8 +53,8 @@ def load_pasd_pipeline(args, accelerator, enable_xformers_memory_efficient_atten
         vae = AutoencoderKL.from_pretrained(args.pretrained_model_path, subfolder="vae")
     #feature_extractor = CLIPImageProcessor.from_pretrained(f"{args.pretrained_model_path}/feature_extractor")
 
-    unet = UNet2DConditionModel.from_pretrained(f"{args.pasd_model_path}/unet")
-    controlnet = ControlNetModel.from_pretrained(args.pasd_model_path, subfolder="controlnet")
+    unet = UNet2DConditionModel.from_pretrained(args.pasd_model_path, subfolder="checkpoint-200000/unet")
+    controlnet = ControlNetModel.from_pretrained(args.pasd_model_path, subfolder="checkpoint-200000/controlnet")
 
     personalized_model_root = "checkpoints/personalized_models"
     if args.use_personalized_model and args.personalized_model_path is not None:
@@ -285,7 +285,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--pretrained_model_path", type=str, default="stabilityai/stable-diffusion-xl-base-1.0", help="path of base SD model")
     parser.add_argument("--pretrained_refiner_path", type=str, default="stabilityai/stable-diffusion-xl-refiner-1.0", help="path of refiner SDXL model")
-    parser.add_argument("--pasd_model_path", type=str, default="runs/pasd_sdxl/checkpoint-200000", help="path of PASD model")
+    parser.add_argument("--pasd_model_path", type=str, default="yangtao9009/PASD-SDXL", help="path of PASD model")
     parser.add_argument("--personalized_model_path", type=str, default=None, help="name of personalized dreambooth model, path is 'checkpoints/personalized_models'") # toonyou_beta3.safetensors, majicmixRealistic_v6.safetensors, unet_disney
     parser.add_argument("--control_type", choices=['realisr', 'grayscale'], nargs='?', default="realisr", help="task name")
     parser.add_argument('--high_level_info', choices=['classification', 'detection', 'caption'], nargs='?', default='caption', help="high level information for prompt generation")
